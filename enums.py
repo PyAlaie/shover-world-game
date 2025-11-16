@@ -30,3 +30,23 @@ Move_to_delta = {
     Actions.MoveDown.value: np.array([1, 0]),
     Actions.MoveLeft.value: np.array([0, -1]),
 }
+
+def is_box(value):
+    if 1 <= value <= 10:
+        return True
+    return False
+
+def is_perfect_square(map, start, extend):
+    n = len(map)
+    m = len(map[0])
+    start_i, start_j = start
+    
+    if start_i + extend >= n or start_j + extend >= m:
+        return False
+
+    for i in range(extend+1):
+        for j in range(extend+1):
+            if not is_box(map[start_i+i][start_j+j]):
+                return False
+    
+    return True
