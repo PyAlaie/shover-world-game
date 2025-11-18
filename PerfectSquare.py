@@ -27,6 +27,13 @@ class PerfectSquare:
     def increase_age(self):
         self.age += 1
 
+    def dissolute(self, map):
+        start_i, start_j = self.start
+        for i in range(1,self.extend):
+            for j in range(1,self.extend):
+                map[start_i + i][start_j + j] = Objects.Empty.value
+        return map
+
     def __eq__(self, value):
         if isinstance(value, PerfectSquare) and self.start == value.start and self.extend == value.extend:
             return True
@@ -40,17 +47,16 @@ class PerfectSquare:
 
         n = len(map)
         m = len(map[0])
-
         for i in range(n):
             for j in range(m):
-                if not is_box(map[i][j]):
-                    continue
-                
-                extend = 1
-                while is_perfect_square(map, (i,j), extend):
-                    new_perf_sq = PerfectSquare((i,j), extend)
-                    if new_perf_sq not in perviously_found_perfect_squares:
-                        res.append(new_perf_sq)
+                extend = 4
+                while i + extend <= n and j + extend <= m:
+                    if is_perfect_square(map, (i,j), extend):
+                        new_perf_sq = PerfectSquare((i,j), extend)
+                        if new_perf_sq not in perviously_found_perfect_squares:
+                            res.append(new_perf_sq)
+                        
+                        break
                     
                     extend += 1
         

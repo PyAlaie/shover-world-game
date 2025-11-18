@@ -36,16 +36,29 @@ def is_box(value):
         return True
     return False
 
+def is_empty(value):
+    if value == 0:
+        return True
+    return False
+
 def is_perfect_square(map, start, extend):
-    n = len(map)
-    m = len(map[0])
     start_i, start_j = start
     
-    if start_i + extend >= n or start_j + extend >= m:
-        return False
-
-    for i in range(extend+1):
-        for j in range(extend+1):
+    for i in range(extend):
+        if not is_empty(map[start_i + i][start_j]):
+            return False
+        if not is_empty(map[start_i + i][start_j + extend - 1]):
+            return False
+        
+    
+    for j in range(extend):
+        if not is_empty(map[start_i][start_j+j]):
+            return False
+        if not is_empty(map[start_i+extend - 1][start_j+j]):
+            return False
+    
+    for i in range(1,extend-1):
+        for j in range(1,extend-1):
             if not is_box(map[start_i+i][start_j+j]):
                 return False
     

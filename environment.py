@@ -3,8 +3,8 @@ from gymnasium import spaces
 import numpy as np
 import os
 from enums import Objects, Actions, Move_to_delta
-from pathlib import Path
 import settings
+from PerfectSquare import PerfectSquare
 
 class ShoverWorldEnv(gym.Env):
     def __init__(
@@ -36,6 +36,8 @@ class ShoverWorldEnv(gym.Env):
         self.new_moving_positions = {}
         self.stationary_move = False
 
+        self.perfect_squares = []
+
         self.action_space = spaces.Dict({
             "position": spaces.MultiDiscrete([self.n_rows, self.n_cols]),
             "z": spaces.Discrete(len(Actions))
@@ -47,9 +49,11 @@ class ShoverWorldEnv(gym.Env):
         z = action["z"]
 
         if z == Actions.BarrierMaker:
+            # TODO: write this part
             pass
         
         elif z == Actions.Hellify:
+            # TODO: write this part
             pass
 
         else: # Action of moving, costs 4 staminas anyway (even if nothing happens)
@@ -61,15 +65,34 @@ class ShoverWorldEnv(gym.Env):
                 if self.moving_positions.get((i,j)) != action:
                     self.stamina -= settings.EnvironmentVars.initial_force
                 
-                new_position = position + Move_to_delta.get(action)
+                new_position = position + Move_to_delta.get(z)
                 self.moving_positions = {(new_position[0], new_position[1]): action}
             
             else:
                 self.moving_positions = {}
-                
+
             self.stamina -= 4
         
+        # find new perfect squres
+        new_perf_sqs = PerfectSquare.find_new_perfect_squares(self.map, self.perfect_squares)
+        self.perfect_squares.extend(new_perf_sqs)
+
+        # Automatic Dissolution of Perfect Squares
+        perf_sq_indexs_to_dissolute = []
+        for i, perfect_square in enumerate(self.perfect_squares):
+            if perfect_square.exeeded_max_age(self.perf_sq_initial_age):
+                perf_sq_indexs_to_dissolute.append(i)
+                
+        for sq_index in reversed(perf_sq_indexs_to_dissolute):
+            sq = self.perfect_squares[sq_index]
+            self.map = sq.dissolute(self.map)
+            del self.perfect_squares[sq_index]
+        
         self.timestep += 1
+        
+        # increase the age of all perfect squares
+        for perfect_square in self.perfect_squares:
+            perfect_square.increase_age()
 
         if self._check_termination():
             self.terminated = True
@@ -84,12 +107,11 @@ class ShoverWorldEnv(gym.Env):
         """
         
         i, j = position[0], position[1]
-
+        if self._out_of_bound(i,j) or self.map[i][j] == Objects.Barrier:
+            return 2
+        
         if self.map[i][j] == Objects.Lava.value:
             return 1
-        
-        if self.map[i][j] == Objects.Barrier or self._out_of_bound(i,j):
-            return 2
 
         # if there is no box...
         if 1 > self.map[i][j] or self.map[i][j] > 10:
@@ -107,7 +129,7 @@ class ShoverWorldEnv(gym.Env):
 
             return 3 # the box is pushed into the lava, so now its position is empty 
         
-        elif new_position_status == 3: # if the position ahead is now empty
+        elif new_position_status == 3 or new_position_status == 4: # if the position ahead is now empty
             self.stamina -= settings.EnvironmentVars.unit_force
 
             new_i, new_j = new_position
@@ -122,13 +144,14 @@ class ShoverWorldEnv(gym.Env):
         else: # if we cannot move shit :|
             return 2
             
-
     def reset(self, *, seed=None):
         super().reset(seed=seed)
         
-        self._load_map()
+        self._load_map(self.map_name)
         self.terminated = False
         self.truncated = False
+
+        self.perfect_squares = PerfectSquare.find_new_perfect_squares(self.map, [])
 
         return self._get_obs(), {}
     
@@ -208,10 +231,14 @@ class ShoverWorldEnv(gym.Env):
         return obs
 
 if __name__ == "__main__":
-    env = ShoverWorldEnv("human")
-    env._load_map("map1.txt")
-    print(env.stamina)
-    env.step({"position": np.array([1,2]), "z":Actions.MoveUp.value})
-    env.step({"position": np.array([1,2]), "z":Actions.MoveUp.value})
-    print(env.stamina)
-    print(env.map)
+    env = ShoverWorldEnv("human", map_name="map2.txt")
+    # env._load_map("map2.txt")
+    env.reset()
+    print(env.perfect_squares)
+    # print(env.stamina)
+    # env.step({"position": np.array([1,3]), "z":Actions.MoveUp.value})
+    # env.step({"position": np.array([1,2]), "z":Actions.MoveUp.value})
+    # print(env.stamina)
+    # print(env.map)
+    # a = PerfectSquare.find_new_perfect_squares(env.map, [])
+    # print(a)
