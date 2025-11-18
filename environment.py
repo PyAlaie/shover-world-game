@@ -48,12 +48,11 @@ class ShoverWorldEnv(gym.Env):
         position = action["position"]
         z = action["z"]
 
-        if z == Actions.BarrierMaker:
-            # TODO: write this part
-            pass
+        if z == Actions.BarrierMaker.value:
+            self._apply_barrier_maker_action()
         
-        elif z == Actions.Hellify:
-            # TODO: write this part
+        elif z == Actions.Hellify.value:
+            self._apply_hellify_action()
             pass
 
         else: # Action of moving, costs 4 staminas anyway (even if nothing happens)
@@ -67,12 +66,20 @@ class ShoverWorldEnv(gym.Env):
                 
                 new_position = position + Move_to_delta.get(z)
                 self.moving_positions = {(new_position[0], new_position[1]): action}
+
+                for sq in self.perfect_squares:
+                    if sq.includes(position):
+                        self.perfect_squares.remove(sq)
+                        break
             
             else:
                 self.moving_positions = {}
 
-            self.stamina -= 4
-        
+
+        # increase the age of all perfect squares
+        for perfect_square in self.perfect_squares:
+            perfect_square.increase_age()
+
         # find new perfect squres
         new_perf_sqs = PerfectSquare.find_new_perfect_squares(self.map, self.perfect_squares)
         self.perfect_squares.extend(new_perf_sqs)
@@ -89,13 +96,14 @@ class ShoverWorldEnv(gym.Env):
             del self.perfect_squares[sq_index]
         
         self.timestep += 1
-        
-        # increase the age of all perfect squares
-        for perfect_square in self.perfect_squares:
-            perfect_square.increase_age()
 
         if self._check_termination():
             self.terminated = True
+
+    def _apply_barrier_maker_action(self):
+        sorted_perf_sqs = reversed(sorted(self.perfect_squares, key=lambda x:x.age))
+        for i in sorted_perf_sqs:
+            print(i.age)
 
     def _apply_move_action(self, position, action):
         """
