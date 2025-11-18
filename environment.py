@@ -110,6 +110,22 @@ class ShoverWorldEnv(gym.Env):
         self.perfect_squares.remove(sq)
         self.stamina += (sq.extend - 2)**2
 
+    def _apply_hellify_action(self):
+        sorted_perf_sqs = list(reversed(sorted(self.perfect_squares, key=lambda x:x.age)))
+        sq = None
+        for i in sorted_perf_sqs:
+            if i.extend < 5: # n <= 2
+                continue
+            else:
+                sq = i
+                break
+        if not sq:
+            return
+        
+        self.map = sq.apply_hellify(self.map)
+        self.perfect_squares.remove(sq)
+        self.stamina += (sq.extend - 2)**2
+
     def _apply_move_action(self, position, action):
         """
             returns:

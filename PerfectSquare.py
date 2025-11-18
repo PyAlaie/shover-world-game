@@ -40,6 +40,20 @@ class PerfectSquare:
             for j in range(1,self.extend-1):
                 map[start_i + i][start_j + j] = Objects.Barrier.value
         return map
+    
+    def apply_hellify(self, map):
+        start_i, start_j = self.start
+
+        for i in range(1, self.extend-1):
+            map[start_i + i][start_j + 1] = Objects.Empty.value
+            map[start_i + i][start_j + self.extend-2] = Objects.Empty.value
+            map[start_i + 1][start_j + i] = Objects.Empty.value
+            map[start_i + self.extend-2][start_j + i] = Objects.Empty.value
+        
+        for i in range(2,self.extend-2):
+            for j in range(2,self.extend-2):
+                map[start_i + i][start_j + j] = Objects.Lava.value
+        return map
 
     def __eq__(self, value):
         if isinstance(value, PerfectSquare) and self.start == value.start and self.extend == value.extend:
