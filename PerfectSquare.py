@@ -34,6 +34,13 @@ class PerfectSquare:
                 map[start_i + i][start_j + j] = Objects.Empty.value
         return map
 
+    def apply_barrier_maker(self, map):
+        start_i, start_j = self.start
+        for i in range(1,self.extend-1):
+            for j in range(1,self.extend-1):
+                map[start_i + i][start_j + j] = Objects.Barrier.value
+        return map
+
     def __eq__(self, value):
         if isinstance(value, PerfectSquare) and self.start == value.start and self.extend == value.extend:
             return True

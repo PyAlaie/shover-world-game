@@ -101,9 +101,14 @@ class ShoverWorldEnv(gym.Env):
             self.terminated = True
 
     def _apply_barrier_maker_action(self):
-        sorted_perf_sqs = reversed(sorted(self.perfect_squares, key=lambda x:x.age))
-        for i in sorted_perf_sqs:
-            print(i.age)
+        sorted_perf_sqs = list(reversed(sorted(self.perfect_squares, key=lambda x:x.age)))
+        if len(sorted_perf_sqs) == 0:
+            return 
+        
+        sq = sorted_perf_sqs[0]
+        self.map = sq.apply_barrier_maker(self.map)
+        self.perfect_squares.remove(sq)
+        self.stamina += (sq.extend - 2)**2
 
     def _apply_move_action(self, position, action):
         """
