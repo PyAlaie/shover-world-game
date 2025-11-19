@@ -37,6 +37,7 @@ class ShoverWorldEnv(gym.Env):
         self.stationary_move = False
 
         self.perfect_squares = []
+        self.last_z = None
 
         self.reset()
 
@@ -49,6 +50,8 @@ class ShoverWorldEnv(gym.Env):
     def step(self, action):
         position = action["position"]
         z = action["z"]
+
+        self.last_z = z
 
         if z == Actions.BarrierMaker.value:
             self._apply_barrier_maker_action()
@@ -101,6 +104,8 @@ class ShoverWorldEnv(gym.Env):
         if self._check_termination():
             self.terminated = True
             self.truncated = True
+
+        return self._get_obs(), 0, self.terminated, self.truncated, {}
 
     def _apply_barrier_maker_action(self):
         sorted_perf_sqs = list(reversed(sorted(self.perfect_squares, key=lambda x:x.age)))
@@ -228,7 +233,6 @@ class ShoverWorldEnv(gym.Env):
 
         self.n_rows = len(lines)
         self.n_cols = len(lines[0])
-        print(self.n_rows, self.n_cols)
         
         grid = np.zeros((self.n_rows, self.n_cols), dtype=int)
 
@@ -258,10 +262,9 @@ class ShoverWorldEnv(gym.Env):
     def _get_obs(self):
         obs = {
             "grid": self.map,
-            "agent": None,
             "stamina": self.stamina,
-            "previous_selected_position": None,
-            "previous_action": None,
+            "previous_selected_position": self.moving_positions,
+            "previous_action": self.last_z,
         }
 
         return obs

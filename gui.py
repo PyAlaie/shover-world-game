@@ -209,8 +209,6 @@ class GuiRenderer:
                 self.action_type = None
                 self.selected_cell = None
                 return {"position": (x,y), "z": z}
-                # You can add more actions here...
-                # elif ev.key == pygame.K_1: return (x, y, 3)
 
     def should_quit(self) -> bool:
         return self._quit
@@ -226,7 +224,7 @@ def main():
     renderer = GuiRenderer(window_max_size=(900, 700), fps=30, grid_h=env.n_rows, grid_w=env.n_cols)
 
     human_control = True  
-    agent_control = True
+    agent_control = False
     print("Controls: Arrow keys or WASD to move, Space = noop, Q = quit. Press Ctrl+C to force-quit.")
     try:
         running = True
@@ -237,9 +235,8 @@ def main():
 
             if human_control and key_action is not None:
                 action = key_action
-                # print(action)
-                # print({"position": np.array([1,4]), "z":Actions.MoveUp.value})
-                env.step(action)
+                print(action)
+                obs, reward, terminated, truncated, info = env.step(action)
             
             elif agent_control: # random agent
                 action = env.action_space.sample()
