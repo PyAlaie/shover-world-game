@@ -2,7 +2,7 @@ import gymnasium as gym
 from gymnasium import spaces
 import numpy as np
 import os
-from enums import Objects, Actions, Move_to_delta
+from enums import Objects, Actions, Move_to_delta, is_box
 import settings
 from PerfectSquare import PerfectSquare
 
@@ -38,9 +38,11 @@ class ShoverWorldEnv(gym.Env):
 
         self.perfect_squares = []
 
+        self.reset()
+
         self.action_space = spaces.Dict({
             "position": spaces.MultiDiscrete([self.n_rows, self.n_cols]),
-            "z": spaces.Discrete(len(Actions))
+            "z": spaces.Discrete(len(Actions), start=1)
         })
         self.observation_space = spaces.Box(low=-100, high=100, shape=(self.n_rows,self.n_cols), dtype=np.int32)
 
@@ -53,7 +55,6 @@ class ShoverWorldEnv(gym.Env):
         
         elif z == Actions.Hellify.value:
             self._apply_hellify_action()
-            pass
 
         else: # Action of moving, costs 4 staminas anyway (even if nothing happens)
             res = self._apply_move_action(position, z)
@@ -61,11 +62,11 @@ class ShoverWorldEnv(gym.Env):
             i, j = position[0], position[1]
             
             if res == 3: # the head box was moved
-                if self.moving_positions.get((i,j)) != action:
+                if self.moving_positions.get((i,j)) != z:
                     self.stamina -= settings.EnvironmentVars.initial_force
                 
                 new_position = position + Move_to_delta.get(z)
-                self.moving_positions = {(new_position[0], new_position[1]): action}
+                self.moving_positions = {(int(new_position[0]), int(new_position[1])): z}
 
                 for sq in self.perfect_squares:
                     if sq.includes(position):
@@ -99,6 +100,7 @@ class ShoverWorldEnv(gym.Env):
 
         if self._check_termination():
             self.terminated = True
+            self.truncated = True
 
     def _apply_barrier_maker_action(self):
         sorted_perf_sqs = list(reversed(sorted(self.perfect_squares, key=lambda x:x.age)))
@@ -136,7 +138,7 @@ class ShoverWorldEnv(gym.Env):
         """
         
         i, j = position[0], position[1]
-        if self._out_of_bound(i,j) or self.map[i][j] == Objects.Barrier:
+        if self._out_of_bound(i,j) or self.map[i][j] == Objects.Barrier.value:
             return 2
         
         if self.map[i][j] == Objects.Lava.value:
@@ -191,9 +193,13 @@ class ShoverWorldEnv(gym.Env):
         if self.timestep >= settings.EnvironmentVars.max_timestep:
             return True
 
-        # TODO: if there is no box left, the episode is terminated
-
-        return False
+        # if there is no box left, the episode is terminated
+        for i in range(self.n_rows):
+            for j in range(self.n_cols):
+                if is_box(self.map[i][j]):
+                    return False
+        
+        return True
     
     def _out_of_bound(self, i, j):
         if i < 0 or i >= self.n_rows or j < 0 or j >= self.n_cols:
@@ -222,6 +228,7 @@ class ShoverWorldEnv(gym.Env):
 
         self.n_rows = len(lines)
         self.n_cols = len(lines[0])
+        print(self.n_rows, self.n_cols)
         
         grid = np.zeros((self.n_rows, self.n_cols), dtype=int)
 
