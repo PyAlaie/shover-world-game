@@ -22,25 +22,25 @@ class EnvironmentVars:
     seed = 42
 
 class GuiVars:
-    COLOR_EMPTY = (240, 240, 240)
-    COLOR_BARRIER = (80, 80, 80)
-    COLOR_LAVA = (200, 40, 40)
+    COLOR_EMPTY = (255, 255, 255)
+    COLOR_BARRIER = (19, 36, 64)
+    COLOR_LAVA = (191, 9, 47)
 
     BOX_COLORS = [
-        (255, 179, 186),
+        (59, 151, 151),
         (255, 223, 186),
+        (255, 179, 186),
         (255, 255, 186),
-        (186, 255, 201),
+        (255, 230, 180),
         (186, 225, 255),
         (200, 200, 255),
         (220, 200, 255),
         (255, 200, 220),
         (210, 255, 230),
-        (255, 230, 180),
     ]
     HUD_BG = (30, 30, 30)
     HUD_TEXT = (250, 250, 250)
-    GRID_LINE = (200, 200, 200)
+    GRID_LINE = (230, 230, 230)
 
     MAX_WINDOW_WIDTH = 1000
     MAX_WINDOW_HEIGHT = 900

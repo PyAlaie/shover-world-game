@@ -146,15 +146,6 @@ class GuiRenderer:
                 if self.show_grid_lines:
                     pygame.draw.rect(surf, GRID_LINE, rect, 1)
 
-                # draw number if tile is a box (1..10)
-                if isinstance(val, (int, np.integer)) and 1 <= val <= 1000:
-                    text_surf = self.font.render(str(int(val)), True, (10, 10, 10))
-                    tw, th = text_surf.get_size()
-                    # center text
-                    tx = rect.x + (cs - tw) / 2
-                    ty = rect.y + (cs - th) / 2
-                    surf.blit(text_surf, (tx, ty))
-
         pygame.display.flip()
         # tick FPS
         self.clock.tick(self.fps)
@@ -167,7 +158,6 @@ class GuiRenderer:
                 "z": z
             }
         """
-        
         
         for ev in pygame.event.get():
             if ev.type == pygame.QUIT:
@@ -185,7 +175,6 @@ class GuiRenderer:
                 temp = x
                 x= y 
                 y = temp
-
 
                 self.selected_cell = (x, y)
                 print("Selected cell:", self.selected_cell)
@@ -225,7 +214,7 @@ def main():
 
     human_control = True  
     agent_control = False
-    print("Controls: Arrow keys or WASD to move, Space = noop, Q = quit. Press Ctrl+C to force-quit.")
+    terminated = truncated = False
     try:
         running = True
         while running:
@@ -241,11 +230,27 @@ def main():
             elif agent_control: # random agent
                 action = env.action_space.sample()
                 print(action)
-                env.step(action)
+                obs, reward, terminated, truncated, info = env.step(action)
+
+            if terminated or truncated:
+                running = False
 
             renderer.render(env)
 
-        print("Exiting example loop.")
+        font = pygame.font.SysFont(None, 72)
+        text = font.render("GAME OVER", True, (255, 0, 0))
+        text_rect = text.get_rect(center=(renderer.screen.get_width()//2,
+                                        renderer.screen.get_height()//2))
+
+        renderer.screen.blit(text, text_rect)
+        pygame.display.flip()
+
+        wait = True
+        while wait:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    wait = False
+
     except Exception as e:
         print(e)
     finally:
