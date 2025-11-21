@@ -1,6 +1,8 @@
 # Shover-World — Milestone 1  
 A custom Gym-compatible environment for a grid-based reinforcement-learning game.
 
+![Shover Demo](./demo.gif)
+
 ## Overview
 
 This project implements the environment required for **Milestone 1** of the *AI 2025 – Shover-World* assignment.  
