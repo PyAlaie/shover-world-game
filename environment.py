@@ -35,6 +35,7 @@ class ShoverWorldEnv(gym.Env):
         self.moving_positions = {} # stored as {position, direction}
         self.new_moving_positions = {}
         self.stationary_move = False
+        self.reward = 0
 
         self.perfect_squares = []
         self.last_z = None
@@ -55,11 +56,13 @@ class ShoverWorldEnv(gym.Env):
 
         if z == Actions.BarrierMaker.value:
             self._apply_barrier_maker_action()
+            self.moving_positions = {}
         
         elif z == Actions.Hellify.value:
             self._apply_hellify_action()
+            self.moving_positions = {}
 
-        else: # Action of moving, costs 4 staminas anyway (even if nothing happens)
+        else: # Action of moving
             res = self._apply_move_action(position, z)
 
             i, j = position[0], position[1]
@@ -78,6 +81,7 @@ class ShoverWorldEnv(gym.Env):
             
             else:
                 self.moving_positions = {}
+                self.stamina -= 1
 
 
         # increase the age of all perfect squares
@@ -105,17 +109,21 @@ class ShoverWorldEnv(gym.Env):
             self.terminated = True
             self.truncated = True
 
-        return self._get_obs(), 0, self.terminated, self.truncated, {}
+        this_step_reward = self.reward
+        self.reward = 0
+        return self._get_obs(), this_step_reward, self.terminated, self.truncated, {}
 
     def _apply_barrier_maker_action(self):
         sorted_perf_sqs = list(reversed(sorted(self.perfect_squares, key=lambda x:x.age)))
         if len(sorted_perf_sqs) == 0:
+            self.stamina -= 1
             return 
         
         sq = sorted_perf_sqs[0]
         self.map = sq.apply_barrier_maker(self.map)
         self.perfect_squares.remove(sq)
         self.stamina += (sq.extend - 2)**2
+        self.reward = 10*(sq.extend - 2)**2
 
     def _apply_hellify_action(self):
         sorted_perf_sqs = list(reversed(sorted(self.perfect_squares, key=lambda x:x.age)))
@@ -127,6 +135,7 @@ class ShoverWorldEnv(gym.Env):
                 sq = i
                 break
         if not sq:
+            self.stamina -= 1
             return
         
         self.map = sq.apply_hellify(self.map)
@@ -162,6 +171,7 @@ class ShoverWorldEnv(gym.Env):
             # Box is pused into the lava, so its position would be empty and agent gains stamina  
             self.map[i][j] = Objects.Empty.value
             self.stamina += settings.EnvironmentVars.initial_force
+            self.reward = settings.EnvironmentVars.initial_force
 
             return 3 # the box is pushed into the lava, so now its position is empty 
         
