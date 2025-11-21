@@ -13,7 +13,7 @@ class EnvironmentVars:
     number_of_barriers = 2
 
     max_timestep = 400
-    initial_stamina = 1000
+    initial_stamina = 10000
     initial_force = 40
     unit_force = 10 
     r_lava = initial_force

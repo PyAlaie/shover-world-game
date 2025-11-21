@@ -4,7 +4,7 @@ from typing import Tuple
 import numpy as np
 import settings
 from environment import ShoverWorldEnv
-from enums import Actions
+from enums import Actions, is_box
 
 COLOR_EMPTY = settings.GuiVars.COLOR_EMPTY
 COLOR_BARRIER = settings.GuiVars.COLOR_BARRIER
@@ -213,7 +213,7 @@ def main():
     renderer = GuiRenderer(window_max_size=(900, 700), fps=30, grid_h=env.n_rows, grid_w=env.n_cols)
 
     human_control = True  
-    agent_control = False
+    agent_control = True
     terminated = truncated = False
     try:
         running = True
@@ -228,10 +228,13 @@ def main():
                 obs, reward, terminated, truncated, info = env.step(action)
             
             elif agent_control: # random agent
-                action = env.action_space.sample()
+                while True:
+                    action = env.action_space.sample()
+                    if is_box(env.map[action["position"][0]][action["position"][1]]):
+                        break
                 print(action)
                 obs, reward, terminated, truncated, info = env.step(action)
-
+            
             if terminated or truncated:
                 running = False
 
