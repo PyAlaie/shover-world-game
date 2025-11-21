@@ -47,7 +47,7 @@ This project depends on:
 Install all dependencies:
 
 ```bash
-pip install gym pygame numpy
+pip install -r requirements.txt
 ```
 
 ## How to Run
